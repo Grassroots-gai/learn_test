@@ -1,0 +1,96 @@
+{
+    "MobileNetv1":
+    {
+      "model_name":                "mobilenet_v1",
+      "checkpoint_fp32":           "/tf_dataset/pre-trained-models/mobilenet_v1/fp32/",
+      "in_graph_fp32":             "/tf_dataset/pre-trained-models/mobilenet_v1/fp32/mobilenet_v1_1.0_224_frozen.pb",
+      "model_arg_int8":            "input_height=224 input_width=224 warmup_steps=100 steps=500 input_layer='input' output_layer='MobilenetV1/Predictions/Reshape_1'",
+      "model_arg_accuracy":        "input_height=224 input_width=224 input_layer='input' output_layer='MobilenetV1/Predictions/Reshape_1'",
+      "data_location_accuracy":    "/tf_dataset/dataset/TF_Imagenet_FullData",
+      "model_source_branch":       "master",
+      "batchsize_throuthput":      "128",
+      "batchsize_accuracy":        "100"
+    },
+    "Faster-RCNN":
+    {
+      "model_name":                "faster_rcnn",
+      "in_graph_fp32":             "/tf_dataset/pre-trained-models/fastrcnn/fp32/faster_rcnn_resnet50_fp32_coco/frozen_inference_graph.pb",
+      "model_arg_int8":            "steps=500",
+      "model_arg_fp32":            "steps=500",
+      "data_location":             "/tf_dataset/sh_data/COCO2017/val2017",
+      "data_location_accuracy":    "/tf_dataset/sh_data/faster-rcnn/v1_5/coco_val.record",
+      "model_source_branch":       "20da786b078c85af57a4c88904f7889139739ab0",
+      "batchsize_throuthput":      "1",
+      "batchsize_accuracy":        "1"
+    },
+    "Inception_v3":
+    {
+      "model_name":                "inceptionv3",
+      "in_graph_fp32":             "/tf_dataset/pre-trained-models/inceptionv3/fp32/freezed_inceptionv3.pb",
+      "model_arg_int8":            "warmup_steps=50 steps=500",
+      "model_arg_fp32":            "warmup_steps=50 steps=500",
+      "data_location_accuracy":    "/tf_dataset/dataset/TF_Imagenet_FullData",
+      "batchsize_throuthput":      "128",
+      "batchsize_accuracy":        "100"
+    },
+    "R-FCN":
+    {
+      "model_name":                "rfcn",
+      "in_graph_fp32":             "/tf_dataset/pre-trained-models/rfcn/fp32/rfcn_resnet101_coco_2018_01_28/frozen_inference_graph.pb",
+      "model_arg_int8":            "steps=500",
+      "model_arg_fp32":            "steps=500",
+      "model_arg_accuracy":        "split=\"accuracy_message\"",
+      "data_location":             "/tf_dataset/sh_data/COCO2017/val2017",
+      "data_location_accuracy":    "/tf_dataset/sh_data/faster-rcnn/v1_5/coco_val.record",
+      "model_source_branch":       "20da786b078c85af57a4c88904f7889139739ab0",
+      "batchsize_throuthput":      "1",
+      "batchsize_accuracy":        "1"
+    },
+    "ResNet-50v1.0":
+    {
+      "model_name":                "resnet50",
+      "in_graph_fp32":             "/tf_dataset/pre-trained-models/resnet50/fp32/freezed_resnet50.pb",
+      "model_arg_int8":            "warmup_steps=50 steps=500",
+      "model_arg_fp32":            "warmup_steps=50 steps=500",
+      "data_location_accuracy":    "/tf_dataset/dataset/TF_Imagenet_FullData",
+      "batchsize_throuthput":      "128",
+      "batchsize_accuracy":        "100"
+    },
+    "ResNet-50v1.5":
+    {
+      "model_name":                "resnet50v1_5",
+      "in_graph_fp32":             "/tf_dataset/pre-trained-models/resnet50v1_5/fp32/resnet50_v1.pb",
+      "model_arg_int8":            "warmup_steps=50 steps=500",
+      "model_arg_fp32":            "warmup_steps=50 steps=500",
+      "data_location_accuracy":    "/tf_dataset/dataset/TF_Imagenet_FullData",
+      "batchsize_throuthput":      "128",
+      "batchsize_accuracy":        "100"
+    },
+    "ResNet-101":
+    {
+      "model_name":                "resnet101",
+      "in_graph_fp32":             "/tf_dataset/pre-trained-models/resnet101/fp32/optimized_graph.pb",
+      "model_arg_int8":            "warmup_steps=50 steps=500",
+      "model_arg_fp32":            "warmup_steps=50 steps=500",
+      "data_location_accuracy":    "/tf_dataset/dataset/TF_Imagenet_FullData",
+      "batchsize_throuthput":      "128",
+      "batchsize_accuracy":        "100"
+    },
+    "SSD-MobileNet":
+    {
+      "model_name":                "ssd-mobilenet",
+      "in_graph_fp32":             "/tf_dataset/pre-trained-models/SSDMobilenet/fp32/frozen_inference_graph.pb",
+      "model_source_branch":       "20da786b078c85af57a4c88904f7889139739ab0",
+      "batchsize_throuthput":      "1",
+      "batchsize_accuracy":        "1"
+    },
+    "SSD-ResNet34":
+    {
+      "model_name":                "ssd-resnet34",
+      "in_graph_fp32":             "/tf_dataset/pre-trained-models/ssd-resnet34/fp32/ssd_resnet34_fp32_bs1_pretrained_model.pb",
+      "data_location_accuracy":    "/tf_dataset/dataset/ssd-resnet34",
+      "model_source_branch":       "f505cecde2d8ebf6fe15f40fb8bc350b2b1ed5dc",
+      "batchsize_throuthput":      "1",
+      "batchsize_accuracy":        "1"
+    }
+}

@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+WS="$PWD"
+
+echo "${WS}"
+
+BUILD_AVX_CONTAINERS=${BUILD_AVX_CONTAINERS:-no}
+BUILD_AVX2_CONTAINERS=${BUILD_AVX2_CONTAINERS:-no}
+# Replace '/' with '-' in branch names
+TF_DOCKER_BUILD_DEVEL_BRANCH=${TF_DOCKER_BUILD_DEVEL_BRANCH/\//-}
+TF_DOCKER_BUILD_VERSION=${TF_DOCKER_BUILD_VERSION/\//-}
+ROOT_CONTAINER_TAG=${ROOT_CONTAINER_TAG:-devel}
+
+echo "TF_DOCKER_BUILD_DEVEL_BRANCH=${TF_DOCKER_BUILD_DEVEL_BRANCH}"
+echo "TF_DOCKER_BUILD_IMAGE_NAME=${TF_DOCKER_BUILD_IMAGE_NAME}"
+echo "TF_DOCKER_BUILD_VERSION=${TF_DOCKER_BUILD_VERSION}"
+echo "BUILD_AVX_CONTAINERS=${BUILD_AVX_CONTAINERS}"
+echo "BUILD_AVX2_CONTAINERS=${BUILD_AVX2_CONTAINERS}"
+echo "BUILD_TYPE=${BUILD_TYPE}"
+echo "BUILD_FLAG=${BUILD_FLAG}"
+
+BUILD_MKL_OPT=""
+if [[ ${BUILD_TYPE} == "MKL" ]]; then
+    BUILD_MKL_OPT="--copt=-DINTEL_MKL_ML_ONLY"
+fi
+
+BUILD_FLAG_OPT=""
+if [[ ${BUILD_FLAG} == "-DINTEL_MKL_QUANTIZED" ]]; then
+    BUILD_FLAG_OPT="--copt=-DINTEL_MKL_QUANTIZED"
+fi
+
+# Build containers for AVX
+if [[ ${BUILD_AVX_CONTAINERS} == "yes" ]]; then
+	# Include the instructions for sandybridge and later, but tune for ivybridge
+	TF_BAZEL_BUILD_OPTIONS="--config=mkl ${BUILD_MKL_OPT} ${BUILD_FLAG_OPT} --copt=-march=sandybridge --copt=-mtune=ivybridge --copt=-O3 --cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0"
+
+	# build the python 2 container and whl
+	TF_DOCKER_BUILD_TYPE="MKL" \
+	  TF_DOCKER_BUILD_IS_DEVEL="YES" \
+	  TF_DOCKER_BUILD_DEVEL_BRANCH="${TF_DOCKER_BUILD_DEVEL_BRANCH}" \
+	  TF_DOCKER_BUILD_IMAGE_NAME="${TF_DOCKER_BUILD_IMAGE_NAME}" \
+	  TF_DOCKER_BUILD_VERSION="${TF_DOCKER_BUILD_VERSION}" \
+	  TF_BAZEL_BUILD_OPTIONS="${TF_BAZEL_BUILD_OPTIONS}" \
+	  TF_DOCKER_BUILD_PYTHON_VERSION="PYTHON2" \
+      ROOT_CONTAINER_TAG="${ROOT_CONTAINER_TAG}" \
+      ${WS}/private-tensorflow/tensorflow/tools/docker/intel_parameterized_docker_build.sh
+
+	# build the python 3 container and whl
+	TF_DOCKER_BUILD_TYPE="MKL" \
+	  TF_DOCKER_BUILD_IS_DEVEL="YES" \
+	  TF_DOCKER_BUILD_DEVEL_BRANCH="${TF_DOCKER_BUILD_DEVEL_BRANCH}" \
+	  TF_DOCKER_BUILD_IMAGE_NAME="${TF_DOCKER_BUILD_IMAGE_NAME}" \
+	  TF_DOCKER_BUILD_VERSION="${TF_DOCKER_BUILD_VERSION}" \
+	  TF_DOCKER_BUILD_PYTHON_VERSION="PYTHON3" \
+	  TF_BAZEL_BUILD_OPTIONS="${TF_BAZEL_BUILD_OPTIONS}" \
+      ROOT_CONTAINER_TAG="${ROOT_CONTAINER_TAG}" \
+	  ${WS}/private-tensorflow/tensorflow/tools/docker/intel_parameterized_docker_build.sh
+
+fi
+
+
+
+# Build containers for AVX2
+if [[ ${BUILD_AVX2_CONTAINERS} == "yes" ]]; then
+	TF_BAZEL_BUILD_OPTIONS="--config=mkl ${BUILD_MKL_OPT} ${BUILD_FLAG_OPT} --copt=-march=haswell --copt=-mtune=broadwell --copt=-O3 --cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0"
+
+	# build the python 2 container and whl
+	TF_DOCKER_BUILD_TYPE="MKL" \
+	  TF_DOCKER_BUILD_IS_DEVEL="YES" \
+	  TF_DOCKER_BUILD_DEVEL_BRANCH="${TF_DOCKER_BUILD_DEVEL_BRANCH}" \
+	  TF_DOCKER_BUILD_IMAGE_NAME="${TF_DOCKER_BUILD_IMAGE_NAME}" \
+	  TF_DOCKER_BUILD_VERSION="${TF_DOCKER_BUILD_VERSION}-avx2" \
+	  TF_BAZEL_BUILD_OPTIONS="${TF_BAZEL_BUILD_OPTIONS}" \
+	  ROOT_CONTAINER_TAG="${ROOT_CONTAINER_TAG}" \
+	  ${WS}/private-tensorflow/tensorflow/tools/docker/intel_parameterized_docker_build.sh
+
+	# build the python 3 container and whl
+	TF_DOCKER_BUILD_TYPE="MKL" \
+	  TF_DOCKER_BUILD_IS_DEVEL="YES" \
+	  TF_DOCKER_BUILD_DEVEL_BRANCH="${TF_DOCKER_BUILD_DEVEL_BRANCH}" \
+	  TF_DOCKER_BUILD_IMAGE_NAME="${TF_DOCKER_BUILD_IMAGE_NAME}" \
+	  TF_DOCKER_BUILD_VERSION="${TF_DOCKER_BUILD_VERSION}-avx2" \
+	  TF_DOCKER_BUILD_PYTHON_VERSION="PYTHON3" \
+	  TF_BAZEL_BUILD_OPTIONS="${TF_BAZEL_BUILD_OPTIONS}" \
+	  ROOT_CONTAINER_TAG="${ROOT_CONTAINER_TAG}" \
+	  ${WS}/private-tensorflow/tensorflow/tools/docker/intel_parameterized_docker_build.sh
+fi

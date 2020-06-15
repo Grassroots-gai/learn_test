@@ -1,0 +1,98 @@
+ARG ROOT_CONTAINER_TAG=7
+FROM centos:${ROOT_CONTAINER_TAG}
+
+LABEL maintainer="Clayne Robison <clayne.b.robison@intel.com>"
+
+SHELL ["/bin/bash", "-c"]
+
+RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
+    rpm -Uvh https://centos7.iuscommunity.org/ius-release.rpm
+
+RUN yum update -y && \
+        yum install -y git2u && \
+        yum groupinstall -y "Development Tools" --exclude=git* && yum install -y \
+        freetype-devel \
+        hdf5-devel \
+        java-1.8.0-openjdk-devel \
+        libcurl-devel \
+        libpng12-devel \
+        openssl-devel \
+        unzip \
+        wget \
+        which \
+        zeromq-devel \
+        zlib-devel
+
+# install Python and Pip. ATOW (May 1, 2019) no python3.7 yum package available so building from scratch
+ARG PYTHON="python"
+ARG PIP="pip"
+RUN if [ ${PYTHON} = "python3" -o ${PYTHON} = "python3.4" ]; then \
+      yum install -y python34 python34-devel.x86_64 python34-pip; \
+      ln -sf /usr/bin/python3.4 /usr/bin/python; \
+      sed -i -e 's/#!\/usr\/bin\/python$/#!\/usr\/bin\/python2/g' /usr/bin/yum; \
+      sed -i -e 's/#!\ \/usr\/bin\/python$/#!\ \/usr\/bin\/python2/g' /usr/libexec/urlgrabber-ext-down; \
+      if [ ! -f /usr/bin/${PIP} ]; then \
+        ln -sf /usr/bin/pip3.? /usr/bin/${PIP}; \
+      fi; \
+    elif [ ${PYTHON} = "python3.7" ]; then \
+      yum install -y bzip2-devel gcc libffi-devel tar; \
+      mkdir -p /usr/src && cd /usr/src; \
+      wget --quiet https://www.python.org/ftp/python/3.7.3/Python-3.7.3.tgz; \
+      tar xzf Python-3.7.3.tgz; \
+      cd Python-3.7.3; \
+      ./configure --enable-optimizations; \
+      make altinstall; \
+      rm /usr/src/Python-3.7.3.tgz; \
+      ln -sf /usr/src/Python-3.7.3/python /usr/bin/python; \
+      wget --quiet https://bootstrap.pypa.io/get-pip.py; \
+      ${PYTHON} get-pip.py; \
+      rm get-pip.py; \
+    elif [ ${PYTHON} = "python3.6" ]; then \
+      yum install -y python36 python36-devel.x86_64; \
+      ln -sf /usr/bin/python3.6 /usr/bin/python; \
+      sed -i -e 's/#!\/usr\/bin\/python$/#!\/usr\/bin\/python2/g' /usr/bin/yum; \
+      sed -i -e 's/#!\ \/usr\/bin\/python$/#!\ \/usr\/bin\/python2/g' /usr/libexec/urlgrabber-ext-down; \
+      wget --quiet https://bootstrap.pypa.io/get-pip.py; \
+      ${PYTHON} get-pip.py; \
+      rm get-pip.py; \
+    elif [ ${PYTHON} = "python3.5" ] ; then \
+      wget --quiet https://www.python.org/ftp/python/3.5.6/Python-3.5.6.tar.xz -O /opt/python.tar.xz && \
+      cd /opt && tar -xf python.tar.xz && \
+      cd /opt/Python-3.5.6/ && ./configure && \
+      make && make install; \
+      ln -sf /usr/local/bin/python3.5 /usr/bin/python; \
+      sed -i -e 's/#!\/usr\/bin\/python$/#!\/usr\/bin\/python2/g' /usr/bin/yum; \
+      sed -i -e 's/#!\ \/usr\/bin\/python$/#!\ \/usr\/bin\/python2/g' /usr/libexec/urlgrabber-ext-down; \
+      if [ ! -f /usr/bin/${PIP} ]; then \
+        ln -sf /usr/bin/pip3.? /usr/bin/${PIP}; \
+      fi; \
+    else \
+      yum install -y python-devel.x86_64 python-pip; \
+    fi
+
+# python and python 3.4 need the older version of matplotlib and numpy and a pip upgrade
+RUN if [ ${PYTHON} = "python3.6" -o ${PYTHON} = "python3.5" -o ${PYTHON} = "python3.7" ]; then \
+      ${PIP} --no-cache-dir install --upgrade matplotlib numpy; \
+    else \
+      # need pip18 otherwise error with pandas: https://github.com/pypa/pip/issues/6163#issuecomment-456893424
+      # other option would be to run with the "--no-use-pep517" flag
+      ${PIP} --no-cache-dir install --upgrade pip==19.0.3 numpy==1.14.6 matplotlib==2.2.3 "pyzmq>=17,<=17.1.2"; \
+    fi
+
+RUN ${PIP} --no-cache-dir install --upgrade \
+        Pillow \
+        future \
+        h5py \
+        jupyter \
+        keras_applications \
+        keras_preprocessing \
+        mock \
+        pandas \
+        scipy \
+        setuptools \
+        sklearn \
+        wheel
+
+# Set up Bazel.
+
+ENV JAVA_HOME /usr/lib/jvm/java-1.8.0

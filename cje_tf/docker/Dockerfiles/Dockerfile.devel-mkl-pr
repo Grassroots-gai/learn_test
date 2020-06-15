@@ -1,0 +1,50 @@
+ARG ROOT_CONTAINER_TAG=latest-devel-pr
+FROM tensorflow/tensorflow:${ROOT_CONTAINER_TAG}
+
+LABEL maintainer="Clayne Robison <clayne.b.robison@intel.com>"
+
+# These parameters can be overridden by intel_parameterized_docker_build.sh
+ARG TF_BUILD_VERSION="test_pad_fuse"
+ARG PYTHON="python"
+ARG WHL_DIR="/tmp/pip"
+ARG PIP="pip"
+ARG TENSORFLOW_REPO="https://github.com/intel-tensorflow/tensorflow.git"
+
+# Download and build TensorFlow from the latest sources found in the root container
+# make sure that if they pass in a tag, that it is loaded or we'll get an error
+WORKDIR /
+RUN rm -rf tensorflow && \
+    export TAG_PREFIX="v" && \
+    echo ${TF_BUILD_VERSION} | grep -q ^${TAG_PREFIX}; \
+    if [ $? -eq 0 ]; then \
+        git clone --depth=1 ${TENSORFLOW_REPO}  && \
+        cd tensorflow && \
+        git checkout ${TF_BUILD_VERSION} ; \
+   else \
+        git clone --depth=1 --branch=${TF_BUILD_VERSION} ${TENSORFLOW_REPO}; \
+    fi
+
+
+WORKDIR /tensorflow
+
+RUN yes "" | ${PYTHON} configure.py
+RUN cp .bazelrc /root/.bazelrc
+
+ENV CI_BUILD_PYTHON ${PYTHON}
+
+#COPY ${BAZEL_RC}  /root/.mkl.bazelrc
+#RUN echo "import /root/.mkl.bazelrc" >>/root/.bazelrc
+
+RUN tensorflow/tools/ci_build/builds/configured CPU \
+    bazel build --config=mkl --copt=-DINTEL_MKL_QUANTIZED --copt=-march=sandybridge --copt=-mtune=ivybridge --copt=-O3 --cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0  -c opt \
+        # For optimized builds appropriate for the hardware platform of your choosing, uncomment below...
+        # For ivy-bridge or sandy-bridge
+        # --copt=-march="ivybridge" \
+        # for haswell, broadwell, or skylake
+        # --copt=-march="haswell" \
+        tensorflow/tools/pip_package:build_pip_package && \
+    bazel-bin/tensorflow/tools/pip_package/build_pip_package "${WHL_DIR}" && \
+    ${PIP} --no-cache-dir install --upgrade "${WHL_DIR}"/tensorflow-*.whl && \
+    rm -rf /root/.cache
+
+WORKDIR /root

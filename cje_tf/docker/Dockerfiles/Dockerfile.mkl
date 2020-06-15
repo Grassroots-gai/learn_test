@@ -1,0 +1,15 @@
+ARG ROOT_CONTAINER_TAG=latest
+FROM tensorflow/tensorflow:${ROOT_CONTAINER_TAG}
+
+LABEL maintainer="Clayne Robison <clayne.b.robison@intel.com>"
+
+# This parameter MUST be set by intel_parameterized_docker_build.sh
+ARG TF_WHL_URL
+
+# Optional parameters
+ARG PIP="pip"
+
+COPY ${TF_WHL_URL} /
+RUN ls -la /${TF_WHL_URL}
+RUN ${PIP} install --no-cache-dir --force-reinstall /${TF_WHL_URL}
+

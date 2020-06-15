@@ -1,0 +1,19 @@
+[{
+	"model": "inceptionv3",
+	"precision": "fp32",
+	"model_file": "freezed_inceptionv3.pb",
+	"mode": "inference",
+	"platform": "skx",
+	"metric_name": "latency",
+	"batch_size": 1,
+	"baseline_metric_value": 45.228
+}, {
+	"model": "inceptionv3",
+	"precision": "fp32",
+	"model_file": "freezed_inceptionv3.pb",
+	"mode": "inference",
+	"platform": "skx",
+	"metric_name": "throughput",
+	"batch_size": 128,
+	"baseline_metric_value": 39.270
+}]

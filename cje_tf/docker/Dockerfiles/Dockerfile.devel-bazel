@@ -1,0 +1,12 @@
+ARG ROOT_IMAGE=tensorflow/tensorflow
+ARG ROOT_IMAGE_TAG=devel-py3
+FROM ${ROOT_IMAGE}:${ROOT_IMAGE_TAG}
+
+LABEL maintainer="Chuanqi Wang <chuanqi.wang@intel.com>"
+
+ARG BAZEL_VERSION
+
+RUN wget --quiet https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
+    chmod +x bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
+    ./bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
+    rm -rf bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh

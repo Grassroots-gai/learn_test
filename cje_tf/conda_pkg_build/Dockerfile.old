@@ -1,0 +1,58 @@
+ARG ANACONDA3_VER="5.3.0"
+FROM amr-registry.caas.intel.com/aipg-tf/qa/anaconda-base:${ANACONDA3_VER}
+
+# TF version to build the Conda packages for
+ARG TF_WHLS_VER=v1.12.0
+# TF wheel where TF wheel file and the recipe to build conda package resides
+# should be overridden by the env creating this dockerfile to point to the build dir from artifactory
+ARG TF_WHLS_DIR=/tmp
+# The channel to upload the Conda package toARG CHANNEL "intel"
+ARG CHANNEL=intel
+# Python versions provided by the user to build Conda package for
+ARG PY_VERS="2.7 3.4 3.5 3.6 3.7"
+
+COPY ./${TF_WHLS_DIR} /tmp/${TF_WHLS_VER}
+COPY ./recipes/${TF_WHLS_VER} /tmp/${TF_WHLS_VER}
+
+WORKDIR /tmp/${TF_WHLS_VER}
+
+# Build the conda packages and store them in conda folder for each version
+RUN \
+    for PY_VER in ${PY_VERS}; do \
+        for TF_WHL_DIR in $(find -name "*${PY_VER}*"); do \
+            export CONDA_PY=$(echo ${PY_VER} | tr -d '.'); \
+            export TF_WHL=$(find `pwd`/${TF_WHL_DIR}/ -name "*.whl"); \
+            . /opt/conda/etc/profile.d/conda.sh && \
+            conda activate py${PY_VER} && \
+            conda-build --python ${PY_VER} -c ${CHANNEL} ${TF_WHL_DIR}/meta.yaml; \
+            for CONDA_PKG in $(find /opt/conda/envs/ -name "tensorflow*.tar.bz2"); do \
+                mv ${CONDA_PKG} ${TF_WHL_DIR}/; \
+            done; \
+        done; \
+    done
+
+# Cleanup
+RUN \
+    conda clean --all -y && \
+    rm -rf tmp*
+
+# Since we need to scan the files first before pushing to intel channel
+# The next steps should be commented out for now
+#Login to anaconda
+# RUN anaconda login
+
+# Upload the file, for now this should be commented out,
+# RUN \
+#     for PY_VER in ${PY_VERS}; do \
+#         for TF_WHL_DIR in $(find -name "*${PY_VER}*"); do \
+#             . /opt/conda/etc/profile.d/conda.sh && \
+#             conda activate py${PY_VER} && \
+#             for PYPI_PKG in $(find ${TF_WHL_DIR} -name "tensorflow*.whl"); do \
+#                 anaconda upload --user ${CHANNEL} ${PYPI_PKG}; \
+#             done; \
+#             for CONDA_PKG in $(find ${TF_WHL_DIR} -name "tensorflow*.tar.bz2"); do \
+#                 anaconda upload --user ${CHANNEL} ${CONDA_PKG}; \
+#             done; \
+#         done; \
+#     done
+

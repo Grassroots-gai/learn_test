@@ -1,0 +1,49 @@
+{% set version = "1.12.2" %}
+{% set buildnumber = 0 %}
+
+package:
+  name: tensorflow
+  version: {{version}}
+
+build:
+  script_env:
+    - TF_WHL
+  number: {{buildnumber}}
+  script: pip install --no-deps {{TF_WHL}}
+
+requirements:
+  build:
+    - python
+    - pip
+  run:
+    - python
+    - pip
+    - absl-py >=0.1.6 # missing
+    - astor >=0.6.0 # missing
+    - gast >=0.2.0 # missing
+    - grpcio >=1.8.6 # missing
+    - keras-applications >=1.0.6 # missing
+    - keras-preprocessing >=1.0.5 # missing
+    - numpy >=1.13.3 # latest is 1.13.0
+    - protobuf >=3.6.1 # latest is 3.0.0
+    - setuptools <=39.1.0
+    - six >=1.10.0
+    - tensorboard >=1.12.0,<1.13.0 # missing
+    - termcolor >=1.1.0 # missing
+    - wheel >=0.26
+
+  test:
+  imports:
+    - tensorflow
+
+about:
+  home: http://tensorflow.org/
+  license: Apache 2.0
+  license_family: Apache
+  summary: TensorFlow is a machine learning library
+  description: |
+    TensorFlow provides multiple APIs.The lowest level API, TensorFlow Core
+    provides you with complete programming control.
+  dev_url: https://github.com/tensorflow/tensorflow
+  doc_url: https://www.tensorflow.org/get_started/get_started
+  doc_source_url: https://github.com/tensorflow/tensorflow/tree/master/tensorflow/docs_src

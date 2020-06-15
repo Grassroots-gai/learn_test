@@ -1,0 +1,28 @@
+# To build the image from this file run the following command:
+# docker build --build-arg ANACONDA3_VER=5.3.0 -f Dockerfile.anaconda-base -t amr-registry.caas.intel.com/aipg-tf/qa/anaconda-base:5.3.0 .
+
+ARG ANACONDA3_VER="5.3.0"
+FROM continuumio/anaconda3:${ANACONDA3_VER}
+
+ARG PY_VERS="2.7 3.4 3.5 3.6 3.7"
+
+# Install the required environment and packages for conda-build and upload
+RUN \
+    for PY_VER in ${PY_VERS}; do \
+        conda create -n py${PY_VER} python=${PY_VER}; \
+        . /opt/conda/etc/profile.d/conda.sh && \
+        conda activate py${PY_VER} && \
+        conda install conda-build conda-verify anaconda-client -y; \
+    done
+
+# This is because python3.5 is only present under /opt/conda/pkgs
+RUN \
+    if [ "${PY_VER}" = "3.5" ]; then \
+        python35=$(find /opt/conda/pkgs/python-3.5.*/bin/ -name "python3.5") && \
+        ln -s $python35 /usr/bin/python3.5; \
+    fi;
+
+# Cleanup
+RUN \
+    conda clean --all -y && \
+    rm -rf tmp*
